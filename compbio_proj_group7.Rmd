@@ -5,9 +5,28 @@ date: "`r format(Sys.time(), '%m/%d/%Y')`"
 output: html_document
 ---
 
+Figure C:
+
 ```{r}
 library(readxl)
 
 X <- read_excel("rnaseq_CNS_all.xlsx")
 ```
 
+```{r}
+cor_mat = cor(X[,2:15],method="spearman")
+```
+
+
+
+
+Figure D:
+
+```{r}
+sel_genes = c("Gfap","Aldh1l1","Slc1a3","Aqp4","Tubb3",
+              "Stmn2","Snap25","Eno2","Syn1","Pdgfra",
+              "Cspg4","Enpp6","Nfasc","Pip","Mog","Mbp",
+              "Mobp","Ccl3","Cd11b","Tnf","Cldn5","Flt1","Esam")
+```
+
+Note: "Cd11b" not found. (Maybe wrong capitalization??)
