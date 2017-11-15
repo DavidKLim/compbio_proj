@@ -1,0 +1,11 @@
+---
+title: "compbio_proj"
+output: html_document
+---
+
+```{r}
+library(readxl)
+
+X <- read_excel("rnaseq_CNS_all.xlsx")
+```
+
