@@ -1,6 +1,7 @@
 ---
 title: "compbio_proj"
 author: "David Lim, Mark He, Mike Lafferty"
+date: "`r format(Sys.time(), '%m/%d/%Y')`"
 output: html_document
 ---
 
