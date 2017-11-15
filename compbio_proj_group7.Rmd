@@ -1,5 +1,6 @@
 ---
 title: "compbio_proj"
+author: "David Lim, Mark He, Mike Lafferty"
 output: html_document
 ---
 
