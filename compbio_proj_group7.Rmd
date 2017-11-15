@@ -26,7 +26,7 @@ Figure D:
 sel_genes = c("Gfap","Aldh1l1","Slc1a3","Aqp4","Tubb3",
               "Stmn2","Snap25","Eno2","Syn1","Pdgfra",
               "Cspg4","Enpp6","Nfasc","Pip","Mog","Mbp",
-              "Mobp","Ccl3","Cd11b","Tnf","Cldn5","Flt1","Esam")
+              "Mobp","Ccl3","Itgam","Tnf","Cldn5","Flt1","Esam")
 ```
 
-Note: "Cd11b" not found. (Maybe wrong capitalization??)
+Note: "Cd11b" not found. Different name: "Itgam"
