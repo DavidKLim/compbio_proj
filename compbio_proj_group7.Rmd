@@ -15,6 +15,8 @@ X <- read_excel("rnaseq_CNS_all.xlsx")
 
 ```{r}
 cor_mat = cor(X[,2:15],method="spearman")
+library(pheatmap)
+pheatmap(cor_mat)
 ```
 
 
@@ -27,6 +29,24 @@ sel_genes = c("Gfap","Aldh1l1","Slc1a3","Aqp4","Tubb3",
               "Stmn2","Snap25","Eno2","Syn1","Pdgfra",
               "Cspg4","Enpp6","Nfasc","Pip","Mog","Mbp",
               "Mobp","Ccl3","Itgam","Tnf","Cldn5","Flt1","Esam")
+
+sel_X <- X[X$gene.symbol %in% sel_genes,]
+sel_Xcts <- sel_X[,-1]                       # subset just the counts
+
+sel_means <- rowMeans(sel_Xcts)
+library(genefilter)
+sel_sd <- rowSds(sel_Xcts)
+
+
+num_sd <- matrix(0,nrow=nrow(sel_Xcts),ncol=ncol(sel_Xcts))
+for(i in 1:nrow(sel_Xcts)){
+  num_sd[i,] <- (as.numeric(sel_Xcts[i,]) - sel_means[i])/sel_sd[i]    # calculate # of SD's away from rowMean
+}
+
+pheatmap(num_sd[-17,])
+
+# "Pip" gene has count all = 0.1 --> sd = Inf ??? (row 17)
+# Max SDs is 2 in figure. 3 here
 ```
 
 Note: "Cd11b" not found. Different name: "Itgam"
