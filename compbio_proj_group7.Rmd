@@ -9,8 +9,16 @@ Figure C:
 
 ```{r}
 library(readxl)
+library(genefilter)
 
 X <- read_excel("rnaseq_CNS_all.xlsx")
+
+# filter out genes with 0 SD (or 0 variance)
+X.SDs <- rowSds(X[,2:15])
+good = (X.SDs!=0)
+
+X = X[good,]
+
 ```
 
 ```{r}
@@ -34,7 +42,6 @@ sel_X <- X[X$gene.symbol %in% sel_genes,1:15]  # subsetting genes and omitting W
 sel_Xcts <- sel_X[,-1]                       # subset just the counts
 
 sel_means <- rowMeans(sel_Xcts)
-library(genefilter)
 sel_sd <- rowSds(sel_Xcts)
 
 
@@ -55,3 +62,34 @@ pheatmap(num_sd[-17,])
 ```
 
 Note: "Cd11b" not found. Different name: "Itgam"
+
+
+
+
+
+FIGURE 3B using Row variances instead of "enrichment":
+```{r}
+# Using genes with top 40 row variances
+std.dev <- rowSds(X[,2:15])
+sel.X <- X[which(order(std.dev)<=40),]
+
+hc = hclust(dist(t(sel.X[,2:15])))
+plot(hc)
+```
+
+```{r}
+genes <- sel.X[,1]
+sel.X <- sel.X[,-1]
+
+sel_means <- rowMeans(sel.X)
+sel_sd <- rowSds(sel.X)
+
+num_sd <- matrix(0,nrow=nrow(sel.X),ncol=ncol(sel.X))
+for(i in 1:nrow(sel.X)){
+  num_sd[i,] <- (as.numeric(sel.X[i,]) - sel_means[i])/sel_sd[i]    # calculate # of SD's away from rowMean
+}
+
+rownames(num_sd) = as.matrix(genes)
+colnames(num_sd) = colnames(sel.X)
+heatmap(t(num_sd))
+```
