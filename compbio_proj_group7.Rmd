@@ -5,7 +5,7 @@ date: "`r format(Sys.time(), '%m/%d/%Y')`"
 output: html_document
 ---
 
-Figure C:
+Figure 1C:
 
 ```{r}
 library(readxl)
@@ -27,10 +27,7 @@ library(pheatmap)
 pheatmap(cor_mat)
 ```
 
-
-
-
-Figure D:
+Figure 1D:
 
 ```{r}
 sel_genes = c("Gfap","Aldh1l1","Slc1a3","Aqp4","Tubb3",
@@ -79,7 +76,7 @@ plot(hc)
 
 ```{r}
 genes <- sel.X[,1]
-sel.X <- sel.X[,-1]
+sel.X <- sel.X[,2:15]
 
 sel_means <- rowMeans(sel.X)
 sel_sd <- rowSds(sel.X)
@@ -91,5 +88,11 @@ for(i in 1:nrow(sel.X)){
 
 rownames(num_sd) = as.matrix(genes)
 colnames(num_sd) = colnames(sel.X)
-heatmap(t(num_sd))
+
+dists = dist(num_sd)
+hc = hclust(dists)
+dend = as.dendrogram(hc)
+
+row_order <- 1:ncol(num_sd)
+heatmap(t(num_sd),Rowv=c(12,11,10,9,14,13,6,5,4,3,2,1,8,7),Colv=dend,scale="none")
 ```
