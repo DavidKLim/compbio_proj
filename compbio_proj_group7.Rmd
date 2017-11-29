@@ -4,17 +4,12 @@ author: "David Lim, Mark He, Mike Lafferty"
 date: "`r format(Sys.time(), '%m/%d/%Y')`"
 output: html_document
 ---
-Introduction:
+#Introduction:
 <Mike>
 
 
-Figures:
+#Figures:
 <David>
-
-
-
-
-
 
 Figure 1C:
 
@@ -32,8 +27,13 @@ X = X[good,]
 
 cor_mat = cor(X[,-1],method="spearman")
 library(pheatmap)
-pheatmap(cor_mat)
+pheatmap(cor_mat,cluster_rows=F,cluster_cols=F,main="Spearman Correlation of Cell Lines")
 ```
+
+- High correlation within cell line replicates (reproducibility of RNA-seq)
+- Normalization of correlation (?!)
+- Whole brain: correlated with Neuron & OPC
+- NFO & MO & OPC correlated (same lineage)
 
 Figure 1D:
 
@@ -59,40 +59,97 @@ for(i in 1:nrow(sel_Xcts)){
 rownames(num_sd) <- as.matrix(sel_X[,1])
 colnames(num_sd) <- colnames(sel_X[,-1])
 
-pheatmap(num_sd,cluster_cols=F,cluster_rows=F)
+pheatmap(num_sd,cluster_cols=F,cluster_rows=F,main="Number of SDs Away From Mean Across Cell Lines")
 
-##### ISSUES TO RESOLVE: #####
-# "Pip" gene has count all = 0.1 --> sd = Inf ??? (row 17)
-# Max SDs is 2 in figure. 3 here
-# Need to reorder sel_X or num_sd to match the figure
 ```
 
-Note: "Cd11b" not found. Different name: "Itgam". Also, Pip yielded SD = 0 --> omitted.
+- Gene "Cd11b" not found. Different name: "Itgam"
+- Gene "Pip"" yielded SD = 0 --> omitted.
+- High SD of astrocytes and neurons coincide with higher SD of whole brain
 
-FIGURE 3B using Row variances instead of "enrichment":
+
+
+Figure 3B:
+
 ```{r}
-# Using genes with top 40 row variances
+all_genes <- X[,1]
+Xcts <- X[,2:15]
+enrich <- matrix(0,nrow=nrow(Xcts),ncol=ncol(Xcts))             # store enrichment values
+
+for(i in 1:nrow(Xcts)){
+  enrich[i,]<-as.numeric(Xcts[i,])/sum(as.numeric(Xcts[i,]))
+}
+
+enrich2 <- matrix(0,nrow=2*nrow(enrich),ncol=ncol(enrich)/2)         # new matrix to merge replicates
+for(j in 1:(ncol(enrich)/2)){
+  enrich2[1:nrow(enrich),j] <- enrich[,(2*j-1)]
+  enrich2[(nrow(enrich)+1):(2*nrow(enrich)),j] <- enrich[,(2*j)]
+}
+
+enrich_genes <- matrix(0,nrow=40,ncol=ncol(Xcts))
+enrich_id <- NULL
+
+for(j in 1:ncol(enrich2)){
+  #enrich_genes[,j] <- as.matrix(all_genes[order(-enrich[,j])[1:40],1])
+  enrich_id <- c(enrich_id,order(-enrich2[,j])[1:40])
+}
+
+for(i in 1:length(enrich_id)){
+  if(enrich_id[i] > nrow(X)){
+    enrich_id[i] = enrich_id[i] - nrow(X)
+  }
+}
+
+enrich_X <- X[enrich_id,2:15]
+
+enrich_means <- rowMeans(enrich_X)
+enrich_sd <- rowSds(enrich_X)
+
+num_sd <- matrix(0,nrow=nrow(enrich_X),ncol=ncol(enrich_X))
+
+for(i in 1:nrow(enrich_X)){
+  num_sd[i,] <- (as.numeric(enrich_X[i,]) - enrich_means[i])/enrich_sd[i]    # calculate # of SD's away from rowMean
+}
+
+colnames(num_sd) = colnames(enrich_X)
+
+
+dists = dist(num_sd)
+hc = hclust(dists)
+
+o = hc$order[c(41:120,1:40,241:280,201:240,161:200,121:160)]
+Y = t(num_sd)[,o]
+
+
+pheatmap(Y,cluster_rows=F,cluster_cols=F,show_colnames=F,main="Number of SDs Away for Top 40 Enriched Genes Per Cell Line")
+
+```
+
+- Top 40 "enriched" genes for each cell line
+- Is "enrichment" a good indicator of genes that discrimate across cell lines?
+- Selecting top 40 for every cell line: genes with smaller variation may be included
+- Maybe interesting: top 300 variance genes
+
+```{r}
+# Using genes with top 100 row variances
 std.dev <- rowSds(X[,2:15])
-sel.X <- X[which(order(std.dev)<=100),]
+sel.X <- X[order(-std.dev)[1:300],]
 
-hc = hclust(dist(t(sel.X[,2:15])))
-plot(hc)
-```
-
-```{r}
 genes <- sel.X[,1]
-sel.X <- sel.X[,2:15]
+sel.Xcts <- sel.X[,2:15]
 
-sel_means <- rowMeans(sel.X)
-sel_sd <- rowSds(sel.X)
+sel_means <- rowMeans(sel.Xcts)
+sel_sd <- rowSds(sel.Xcts)
 
-num_sd <- matrix(0,nrow=nrow(sel.X),ncol=ncol(sel.X))
-for(i in 1:nrow(sel.X)){
-  num_sd[i,] <- (as.numeric(sel.X[i,]) - sel_means[i])/sel_sd[i]    # calculate # of SD's away from rowMean
+num_sd <- matrix(0,nrow=nrow(sel.Xcts),ncol=ncol(sel.Xcts))
+
+for(i in 1:nrow(sel.Xcts)){
+  num_sd[i,] <- (as.numeric(sel.Xcts[i,]) - sel_means[i])/sel_sd[i]    # calculate # of SD's away from rowMean
 }
 
 rownames(num_sd) = as.matrix(genes)
-colnames(num_sd) = colnames(sel.X)
+colnames(num_sd) = colnames(sel.Xcts)
+
 
 dists = dist(num_sd)
 hc = hclust(dists)
@@ -100,26 +157,29 @@ hc = hclust(dists)
 Y = t(num_sd)[,hc$order]
 
 
-pheatmap(Y,cluster_rows=F,cluster_cols=F,show_colnames=F)
+pheatmap(Y,cluster_rows=F,cluster_cols=F,show_colnames=F,main="Number of SDs Away for Top 300 Variance Genes")
 
 
 ```
 
 
+- Variation paired by replicates (as expected)
+- Most highly variable genes seem to be specific to microglial cell lines
+- Correlation between genes specific to NFO & MO (newly-formed vs. myelinating oligodendrocytes)
 
 
 
 
 
-Correlating 2 cell types:
+#Correlating 2 cell types:
 <Mark>
 
 
-Cibersort:
+#Cibersort:
 <Mike>
 
 
-Conclusions:
+#Conclusions:
 
 
 
