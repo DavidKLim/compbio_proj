@@ -4,6 +4,17 @@ author: "David Lim, Mark He, Mike Lafferty"
 date: "`r format(Sys.time(), '%m/%d/%Y')`"
 output: html_document
 ---
+Introduction:
+<Mike>
+
+
+Figures:
+<David>
+
+
+
+
+
 
 Figure 1C:
 
@@ -14,15 +25,12 @@ library(genefilter)
 X <- read_excel("rnaseq_CNS_all.xlsx")
 
 # filter out genes with 0 SD (or 0 variance)
-X.SDs <- rowSds(X[,2:15])
+X.SDs <- rowSds(X[,-1])
 good = (X.SDs!=0)
 
 X = X[good,]
 
-```
-
-```{r}
-cor_mat = cor(X[,2:15],method="spearman")
+cor_mat = cor(X[,-1],method="spearman")
 library(pheatmap)
 pheatmap(cor_mat)
 ```
@@ -33,9 +41,10 @@ Figure 1D:
 sel_genes = c("Gfap","Aldh1l1","Slc1a3","Aqp4","Tubb3",
               "Stmn2","Snap25","Eno2","Syn1","Pdgfra",
               "Cspg4","Enpp6","Nfasc","Pip","Mog","Mbp",
-              "Mobp","Ccl3","Itgam","Tnf","Cldn5","Flt1","Esam")
+              "Mobp","Ccl3","Itgam","Tnf","Cldn5","Flt1","Esam")    # Itgam = Cd11b in paper
 
-sel_X <- X[X$gene.symbol %in% sel_genes,1:15]  # subsetting genes and omitting WB1,2,3
+sel_X <- X[X$gene.symbol %in% sel_genes,]  # subsetting genes and omitting WB1,2,3
+sel_X <- sel_X[c(10,1,17,2,22,19,18,6,20,16,5,7,15,14,12,13,3,11,21,4,9,8),]
 sel_Xcts <- sel_X[,-1]                       # subset just the counts
 
 sel_means <- rowMeans(sel_Xcts)
@@ -50,7 +59,7 @@ for(i in 1:nrow(sel_Xcts)){
 rownames(num_sd) <- as.matrix(sel_X[,1])
 colnames(num_sd) <- colnames(sel_X[,-1])
 
-pheatmap(num_sd[-17,])
+pheatmap(num_sd,cluster_cols=F,cluster_rows=F)
 
 ##### ISSUES TO RESOLVE: #####
 # "Pip" gene has count all = 0.1 --> sd = Inf ??? (row 17)
@@ -58,17 +67,13 @@ pheatmap(num_sd[-17,])
 # Need to reorder sel_X or num_sd to match the figure
 ```
 
-Note: "Cd11b" not found. Different name: "Itgam"
-
-
-
-
+Note: "Cd11b" not found. Different name: "Itgam". Also, Pip yielded SD = 0 --> omitted.
 
 FIGURE 3B using Row variances instead of "enrichment":
 ```{r}
 # Using genes with top 40 row variances
 std.dev <- rowSds(X[,2:15])
-sel.X <- X[which(order(std.dev)<=40),]
+sel.X <- X[which(order(std.dev)<=100),]
 
 hc = hclust(dist(t(sel.X[,2:15])))
 plot(hc)
@@ -91,8 +96,30 @@ colnames(num_sd) = colnames(sel.X)
 
 dists = dist(num_sd)
 hc = hclust(dists)
-dend = as.dendrogram(hc)
 
-row_order <- 1:ncol(num_sd)
-heatmap(t(num_sd),Rowv=c(12,11,10,9,14,13,6,5,4,3,2,1,8,7),Colv=dend,scale="none")
+Y = t(num_sd)[,hc$order]
+
+
+pheatmap(Y,cluster_rows=F,cluster_cols=F,show_colnames=F)
+
+
 ```
+
+
+
+
+
+
+
+Correlating 2 cell types:
+<Mark>
+
+
+Cibersort:
+<Mike>
+
+
+Conclusions:
+
+
+
